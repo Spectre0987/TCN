@@ -127,14 +127,14 @@ public class Main{
 		}
 		fw.write("\t}\n");
 		
-		fw.write("\t@Override\n\tpublic void render(Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {\n");
+		fw.write("\t@Override\n\tpublic void render(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {\n");
 		for(Cube c : list) {
-			fw.write("\t\t" + c.name + ".render(f5);\n");
+			fw.write("\t\t" + c.name + ".render(scale);\n");
 		}
 		fw.write("\t}\n");
 		fw.write("\tprivate void setRotation(ModelRenderer model, float x, float y, float z){\n\t\tmodel.rotateAngleX = x;\n\t\tmodel.rotateAngleY = y;\n\t\tmodel.rotateAngleZ = z;\n\t}\n\n");
 
-		fw.write("\t@Override\n\tpublic void setRotationAngles(float f, float f1, float f2, float f3, float f4, float f5, Entity entity){\n\t\tsuper.setRotationAngles(f, f1, f2, f3, f4, f5, entity);\n\t}\n");
+		fw.write("\t@Override\n\tpublic void setRotationAngles((float limbSwing, float limbSwingAmount, float ageInTicks, float netheadYaw, float headPitch, float scaleFactor, Entity entity){\n\t\tsuper.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netheadYaw, headPitch, scaleFactor, entity);\n\t}\n");
 		fw.write("}");
 		fw.close();
 
