@@ -112,6 +112,7 @@ public class Main{
 			if(names.contains(c.name)) {
 				c.name = "Gen" + id++;
 			}
+			names.add(c.name);
 			fw.write("\tModelRenderer " + c.name + ";\n");
 		}
 		fw.write("\n\tpublic " + modelName + "() { \n\n");
