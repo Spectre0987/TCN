@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.zip.ZipFile;
 
 import javax.swing.JFileChooser;
@@ -98,6 +99,8 @@ public class Main{
 	}
 	
 	private static void writeJava(ArrayList<Cube> list) throws IOException {
+		String[] zanyComments = {""};
+		Random rand = new Random();
 		
 		File f = new File(modelName + ".java");
 		if(!f.exists())f.createNewFile();
@@ -107,6 +110,7 @@ public class Main{
 		
 		fw.write("package help;\n\n\n");
 		fw.write("import net.minecraft.client.model.ModelBase;\nimport net.minecraft.client.model.ModelRenderer;\nimport net.minecraft.entity.Entity;\n\n");
+		fw.write("//" + zanyComments[rand.nextInt(zanyComments.length - 1)] + "\n\n");
 		fw.write("public class "+ modelName + " extends ModelBase {\n\n");
 		for(Cube c : list) {
 			if(names.contains(c.name)) {
@@ -122,7 +126,7 @@ public class Main{
 			fw.write("\t\t" + c.name + ".addBox(" + c.offX + "F, " + c.offY + "F, " + c.offZ + "F, " + c.sizeX + ", " + c.sizeY + ", " + c.sizeZ + ");\n");
 			fw.write("\t\t" + c.name + ".setTextureSize(" + maxU + ", " + maxV + ");\n");
 			fw.write("\t\t" + c.name + ".setRotationPoint(" + c.posX + "F, " + c.posY + "F, " + c.posZ + "F);\n");
-			fw.write("\t\t" + "setRotation(" + c.name + ", " + Math.toRadians(c.rotX) + "F, "+ Math.toRadians(c.rotY) + "F, " + Math.toRadians(c.posZ) + "F);\n");
+			fw.write("\t\t" + "setRotation(" + c.name + ", " + Math.toRadians(c.rotX) + "F, "+ Math.toRadians(c.rotY) + "F, " + Math.toRadians(c.rotZ) + "F);\n");
 			fw.write("\t\t" + c.name + ".mirror = " + c.mirror + ";\n\n");
 		}
 		fw.write("\t}\n");
