@@ -1,11 +1,13 @@
 package net.spectre;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import javax.swing.JFileChooser;
@@ -40,6 +42,25 @@ public class Main{
 				Main.modelName = fc.getSelectedFile().getName().replaceAll(" ", "").replaceAll("_", "").replaceAll("-", "").replace(".tcn", "");
 				ZipFile zf = new ZipFile(fc.getSelectedFile());
 				InputStream is = zf.getInputStream(zf.getEntry("model.xml"));
+				ZipEntry imageEntry = null;
+				Enumeration<? extends ZipEntry> entries = zf.entries();
+				while(entries.hasMoreElements()) {
+					ZipEntry ze = entries.nextElement();
+					if(ze.getName().endsWith(".png")) {
+						imageEntry = ze;
+						break;
+					}
+				}
+				InputStream imageS = zf.getInputStream(imageEntry);
+				FileOutputStream os = new FileOutputStream(fc.getSelectedFile().getParentFile().getPath() + "/texture.png");
+				byte[] ib = new byte[1024];
+				int len;
+				while((len = imageS.read(ib)) != -1) {
+					os.write(ib, 0, len);
+				}
+				os.flush();
+				os.close();
+				imageS.close();
 				
 				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 				factory.setValidating(false);
@@ -99,8 +120,6 @@ public class Main{
 	}
 	
 	private static void writeJava(ArrayList<Cube> list) throws IOException {
-		String[] zanyComments = {""};
-		Random rand = new Random();
 		
 		File f = new File(modelName + ".java");
 		if(!f.exists())f.createNewFile();
@@ -110,7 +129,6 @@ public class Main{
 		
 		fw.write("package help;\n\n\n");
 		fw.write("import net.minecraft.client.model.ModelBase;\nimport net.minecraft.client.model.ModelRenderer;\nimport net.minecraft.entity.Entity;\n\n");
-		fw.write("//" + zanyComments[rand.nextInt(zanyComments.length - 1)] + "\n\n");
 		fw.write("public class "+ modelName + " extends ModelBase {\n\n");
 		for(Cube c : list) {
 			if(names.contains(c.name)) {
