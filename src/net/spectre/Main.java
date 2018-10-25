@@ -1,11 +1,14 @@
 package net.spectre;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -118,6 +121,24 @@ public class Main{
 					}
 				}
 				cubeList.add(c);
+			}
+			
+			//Image
+			Enumeration<? extends ZipEntry> entries = tcn.entries();
+			while(entries.hasMoreElements()) {
+				ZipEntry entry = entries.nextElement();
+				if(entry.getName().endsWith(".png")) {
+					InputStream is = tcn.getInputStream(entry);
+					FileOutputStream os = new FileOutputStream(new File(file.getParentFile().getAbsolutePath().toString() + "/" + file.getName().replaceAll(".tcn", "") + ".png"));
+					byte[] bytes = new byte[1024];
+					int len;
+					while((len = is.read(bytes)) != -1) {
+						os.write(bytes, 0, len);
+					}
+					os.flush();
+					os.close();
+					is.close();
+				}
 			}
 			tcn.close();
 			tcnIS.close();
