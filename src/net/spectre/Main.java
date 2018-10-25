@@ -1,17 +1,13 @@
 package net.spectre;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
+import java.util.List;
 import java.util.zip.ZipFile;
 
-import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileFilter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -21,105 +17,13 @@ import org.w3c.dom.NodeList;
 
 public class Main{
 	
-	public static String modelName = "Cat";
 	public static int maxU = 0, maxV = 0;
 	
 	public static void main(String[] args) {
-		JFileChooser fc = new JFileChooser();
-		fc.setFileFilter(new FileFilter() {
-
-			@Override
-			public String getDescription() {
-				return "Techne model files";
-			}
-
-			@Override
-			public boolean accept(File file) {
-				return file.isDirectory() || file.getName().endsWith(".tcn");
-			}});
-		if(fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-			try {
-				Main.modelName = fc.getSelectedFile().getName().replaceAll(" ", "").replaceAll("_", "").replaceAll("-", "").replace(".tcn", "");
-				ZipFile zf = new ZipFile(fc.getSelectedFile());
-				InputStream is = zf.getInputStream(zf.getEntry("model.xml"));
-				ZipEntry imageEntry = null;
-				Enumeration<? extends ZipEntry> entries = zf.entries();
-				while(entries.hasMoreElements()) {
-					ZipEntry ze = entries.nextElement();
-					if(ze.getName().endsWith(".png")) {
-						imageEntry = ze;
-						break;
-					}
-				}
-				InputStream imageS = zf.getInputStream(imageEntry);
-				FileOutputStream os = new FileOutputStream(fc.getSelectedFile().getParentFile().getPath() + "/texture.png");
-				byte[] ib = new byte[1024];
-				int len;
-				while((len = imageS.read(ib)) != -1) {
-					os.write(ib, 0, len);
-				}
-				os.flush();
-				os.close();
-				imageS.close();
-				
-				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-				factory.setValidating(false);
-				DocumentBuilder db = factory.newDocumentBuilder();
-				Document d = db.parse(is);
-				NodeList texList = d.getElementsByTagName("TextureSize");
-				for(int tli = 0; tli < texList.getLength(); ++tli) {
-					String[] s = texList.item(tli).getTextContent().split(",");
-					maxU = Integer.parseInt(get(s, 0));
-					maxV = Integer.parseInt(get(s, 1));
-				}
-				NodeList nl = d.getElementsByTagName("Shape");
-				ArrayList<Cube> list = new ArrayList<Cube>();
-				for(int i = 0; i < nl.getLength(); ++i) {
-					Node pNode = nl.item(i);
-					Cube cube = new Cube();
-					cube.setName(pNode.getAttributes().getNamedItem("name").getNodeValue());
-					NodeList childList = pNode.getChildNodes();
-					for(int c = 0; c < childList.getLength(); ++c) {
-						Node node = childList.item(c);
-						String name = node.getNodeName().toLowerCase();
-						if(name.equals("position")) {
-							String[] pos = node.getTextContent().split(",");
-							cube.setPosition(Double.parseDouble(get(pos, 0)), Double.parseDouble(get(pos, 1)), Double.parseDouble(get(pos, 2)));
-						}
-						else if(name.equals("offset")) {
-							String[] off = node.getTextContent().split(",");
-							cube.setOffset(Double.parseDouble(get(off, 0)), Double.parseDouble(get(off, 1)), Double.parseDouble(get(off, 2)));
-						}
-						else if(name.equals("rotation")) {
-							String[] rot = node.getTextContent().split(",");
-							cube.setRotation(Double.parseDouble(get(rot, 0)), Double.parseDouble(get(rot, 1)), Double.parseDouble(get(rot, 2)));
-						}
-						else if(name.equals("textureoffset")) {
-							String[] tex = node.getTextContent().split(",");
-							cube.setTexOffset(Integer.parseInt(get(tex, 0)), Integer.parseInt(get(tex, 1)));
-						}
-						else if(name.equals("size")) {
-							String[] s = node.getTextContent().split(",");
-							cube.setSize(Integer.parseInt(get(s, 0)), Integer.parseInt(get(s, 1)), Integer.parseInt(get(s, 2)));
-						}
-						else if(name.equals("ismirrored")) {
-							cube.setMirror(Boolean.parseBoolean(node.getTextContent()));
-							System.out.println(cube.mirror);
-						}
-					}
-					list.add(cube);
-				}
-				writeJava(list);
-				is.close();
-				zf.close();
-			}
-			catch(Exception e){
-				e.printStackTrace();
-			}
-		}
+		new UI();
 	}
 	
-	private static void writeJava(ArrayList<Cube> list) throws IOException {
+	public static void writeJava(List<Cube> list, String modelName) throws IOException {
 		
 		File f = new File(modelName + ".java");
 		if(!f.exists())f.createNewFile();
@@ -167,5 +71,62 @@ public class Main{
 		return s.length > index ? s[index] : "0";
 	}
 	public Main() {}
+
+	public static Model readCubes(File file) {
+		System.out.println("Starting...");
+		try {
+			ZipFile tcn = new ZipFile(file);
+			InputStream tcnIS = tcn.getInputStream(tcn.getEntry("model.xml"));
+			DocumentBuilderFactory fact = DocumentBuilderFactory.newInstance();
+			fact.setValidating(false);
+			
+			DocumentBuilder build = fact.newDocumentBuilder();
+			Document doc = build.parse(tcnIS);
+
+			List<Cube> cubeList = new ArrayList<Cube>();
+			NodeList rootList = doc.getElementsByTagName("Shape");
+			for(int nodeIndex = 0; nodeIndex < rootList.getLength(); ++nodeIndex) {
+				Node node = rootList.item(nodeIndex);
+				Cube c = new Cube();
+				c.setName(node.getAttributes().getNamedItem("name").getNodeValue());
+				NodeList childNodes = node.getChildNodes();
+				for(int childIndex = 0; childIndex < childNodes.getLength(); ++childIndex) {
+					Node child = childNodes.item(childIndex);
+					String name = child.getNodeName().replace("#text", "").trim().toLowerCase();
+					if(name.equals("position")) {
+						String[] pos = child.getTextContent().split(",");
+						c.setPosition(Double.parseDouble(get(pos, 0)), Double.parseDouble(get(pos, 1)), Double.parseDouble(get(pos, 2)));
+					}
+					if(name.equals("rotation")) {
+						String[] rot = child.getTextContent().split(",");
+						c.setRotation(Double.parseDouble(get(rot, 0)), Double.parseDouble(get(rot, 1)), Double.parseDouble(get(rot, 2)));
+					}
+					if(name.equals("ismirrored")) {
+						c.setMirror(Boolean.parseBoolean(child.getTextContent()));
+					}
+					if(name.equals("offset")) {
+						String[] of = child.getTextContent().split(",");
+						c.setOffset(Double.parseDouble(get(of, 0)), Double.parseDouble(get(of, 1)), Double.parseDouble(get(of, 2)));
+					}
+					if(name.equals("size")) {
+						String[] size = child.getTextContent().split(",");
+						c.setSize(Integer.parseInt(get(size, 0)), Integer.parseInt(get(size, 1)), Integer.parseInt(get(size, 2)));
+					}
+					if(name.equals("textureoffset")) {
+						String[] to = child.getTextContent().split(",");
+						c.setSize(Integer.parseInt(get(to, 0)), Integer.parseInt(get(to, 1)), Integer.parseInt(get(to, 2)));
+					}
+				}
+				cubeList.add(c);
+			}
+			tcn.close();
+			tcnIS.close();
+			return new Model(file.getName().trim().replace(".tcn", ""), cubeList);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 
 }
