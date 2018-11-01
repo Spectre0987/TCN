@@ -21,12 +21,13 @@ import org.w3c.dom.NodeList;
 public class Main{
 	
 	public static int maxU = 0, maxV = 0;
+	public static UI ui;
 	
 	public static void main(String[] args) {
-		new UI();
+		ui = new UI();
 	}
 	
-	public static void writeJava(List<Cube> list, String modelName) throws IOException {
+	public static void writeJava(List<Cube> list, String modelName, String prefix) throws IOException {
 		
 		File f = new File(modelName + ".java");
 		if(!f.exists())f.createNewFile();
@@ -42,11 +43,12 @@ public class Main{
 				c.name = "Gen" + id++;
 			}
 			names.add(c.name);
-			fw.write("\tModelRenderer " + c.name + ";\n");
+			fw.write("\tModelRenderer " + (prefix != null ? prefix + c.name : c.name) + ";\n");
 		}
 		fw.write("\n\tpublic " + modelName + "() { \n\n");
 		fw.write("\t\ttextureWidth = " + maxU + ";\n\t\ttextureHeight = " + maxV + ";\n\n");
 		for(Cube c : list) {
+			c.name = prefix != null ? prefix + c.name : c.name;
 			fw.write("\t\t" + c.name + " = new ModelRenderer(this, " + c.texU + ", " + c.texV + ");\n");
 			fw.write("\t\t" + c.name + ".addBox(" + c.offX + "F, " + c.offY + "F, " + c.offZ + "F, " + c.sizeX + ", " + c.sizeY + ", " + c.sizeZ + ");\n");
 			fw.write("\t\t" + c.name + ".setTextureSize(" + maxU + ", " + maxV + ");\n");
@@ -148,6 +150,10 @@ public class Main{
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public static InputStream getResource(String string) {
+		return Main.getResource("/assets/" + string);
 	}
 
 }
