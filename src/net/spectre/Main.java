@@ -20,16 +20,15 @@ import org.w3c.dom.NodeList;
 
 public class Main{
 	
-	public static int maxU = 0, maxV = 0;
 	public static UI ui;
 	
 	public static void main(String[] args) {
 		ui = new UI();
 	}
 	
-	public static void writeJava(List<Cube> list, String modelName, String prefix) throws IOException {
+	public static void writeJava(Model model, String prefix) throws IOException {
 		
-		File f = new File(modelName + ".java");
+		File f = new File(model.name + ".java");
 		if(!f.exists())f.createNewFile();
 		FileWriter fw = new FileWriter(f);
 		ArrayList<String> names = new ArrayList<>();
@@ -37,21 +36,21 @@ public class Main{
 		
 		fw.write("package help;\n\n\n");
 		fw.write("import net.minecraft.client.model.ModelBase;\nimport net.minecraft.client.model.ModelRenderer;\nimport net.minecraft.entity.Entity;\n\n");
-		fw.write("public class "+ modelName + " extends ModelBase {\n\n");
-		for(Cube c : list) {
+		fw.write("public class "+ model.name + " extends ModelBase {\n\n");
+		for(Cube c : model.cubes) {
 			if(names.contains(c.name)) {
 				c.name = "Gen" + id++;
 			}
 			names.add(c.name);
 			fw.write("\tModelRenderer " + (prefix != null ? prefix + c.name : c.name) + ";\n");
 		}
-		fw.write("\n\tpublic " + modelName + "() { \n\n");
-		fw.write("\t\ttextureWidth = " + maxU + ";\n\t\ttextureHeight = " + maxV + ";\n\n");
-		for(Cube c : list) {
+		fw.write("\n\tpublic " + model.name + "() { \n\n");
+		fw.write("\t\ttextureWidth = " + model.maxX + ";\n\t\ttextureHeight = " + model.maxY + ";\n\n");
+		for(Cube c : model.cubes) {
 			c.name = prefix != null ? prefix + c.name : c.name;
 			fw.write("\t\t" + c.name + " = new ModelRenderer(this, " + c.texU + ", " + c.texV + ");\n");
 			fw.write("\t\t" + c.name + ".addBox(" + c.offX + "F, " + c.offY + "F, " + c.offZ + "F, " + c.sizeX + ", " + c.sizeY + ", " + c.sizeZ + ");\n");
-			fw.write("\t\t" + c.name + ".setTextureSize(" + maxU + ", " + maxV + ");\n");
+			fw.write("\t\t" + c.name + ".setTextureSize(textureWidth, textureHeight);\n");
 			fw.write("\t\t" + c.name + ".setRotationPoint(" + c.posX + "F, " + c.posY + "F, " + c.posZ + "F);\n");
 			fw.write("\t\t" + "setRotation(" + c.name + ", " + Math.toRadians(c.rotX) + "F, "+ Math.toRadians(c.rotY) + "F, " + Math.toRadians(c.rotZ) + "F);\n");
 			fw.write("\t\t" + c.name + ".mirror = " + c.mirror + ";\n\n");
@@ -59,7 +58,7 @@ public class Main{
 		fw.write("\t}\n");
 		
 		fw.write("\t@Override\n\tpublic void render(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {\n");
-		for(Cube c : list) {
+		for(Cube c : model.cubes) {
 			fw.write("\t\t" + c.name + ".render(scale);\n");
 		}
 		fw.write("\t}\n");
@@ -88,6 +87,8 @@ public class Main{
 			DocumentBuilder build = fact.newDocumentBuilder();
 			Document doc = build.parse(tcnIS);
 
+			Model model = new Model();
+			model.name = file.getName().replace(".tcn", "").trim();
 			List<Cube> cubeList = new ArrayList<Cube>();
 			NodeList rootList = doc.getElementsByTagName("Shape");
 			for(int nodeIndex = 0; nodeIndex < rootList.getLength(); ++nodeIndex) {
@@ -119,7 +120,7 @@ public class Main{
 					}
 					if(name.equals("textureoffset")) {
 						String[] to = child.getTextContent().split(",");
-						c.setSize(Integer.parseInt(get(to, 0)), Integer.parseInt(get(to, 1)), Integer.parseInt(get(to, 2)));
+						c.setTexOffset(Integer.parseInt(get(to, 0)), Integer.parseInt(get(to, 1)));
 					}
 				}
 				cubeList.add(c);
@@ -144,7 +145,15 @@ public class Main{
 			}
 			tcn.close();
 			tcnIS.close();
-			return new Model(file.getName().trim().replace(".tcn", ""), cubeList);
+			
+			NodeList texSizeList = doc.getElementsByTagName("TextureSize");
+			for(int tex = 0; tex < texSizeList.getLength(); ++ tex) {
+				String[] size = texSizeList.item(tex).getTextContent().split(",");
+				model.maxX = Integer.parseInt(get(size, 0));
+				model.maxY = Integer.parseInt(get(size, 1));
+			}
+			model.cubes = cubeList;
+			return model;
 		}
 		catch(Exception e) {
 			e.printStackTrace();

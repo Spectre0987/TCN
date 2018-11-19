@@ -1,13 +1,10 @@
 package net.spectre;
 
 import java.awt.CardLayout;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.image.ImageObserver;
 import java.io.File;
 import java.util.ArrayList;
@@ -96,7 +93,7 @@ public class UI extends JFrame{
 						}
 					}
 					for(Model model : models) {
-						Main.writeJava(model.cubes, model.name, Main.ui.field.getText());
+						Main.writeJava(model, Main.ui.field.getText());
 					}
 					System.exit(0);
 				}
