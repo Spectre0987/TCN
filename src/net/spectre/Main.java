@@ -64,7 +64,7 @@ public class Main{
 		fw.write("\t}\n");
 		fw.write("\tprivate void setRotation(ModelRenderer model, float x, float y, float z){\n\t\tmodel.rotateAngleX = x;\n\t\tmodel.rotateAngleY = y;\n\t\tmodel.rotateAngleZ = z;\n\t}\n\n");
 
-		fw.write("\t@Override\n\tpublic void setRotationAngles((float limbSwing, float limbSwingAmount, float ageInTicks, float netheadYaw, float headPitch, float scaleFactor, Entity entity){\n\t\tsuper.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netheadYaw, headPitch, scaleFactor, entity);\n\t}\n");
+		fw.write("\t@Override\n\tpublic void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netheadYaw, float headPitch, float scaleFactor, Entity entity){\n\t\tsuper.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netheadYaw, headPitch, scaleFactor, entity);\n\t}\n");
 		fw.write("}");
 		fw.close();
 
